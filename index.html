@@ -204,7 +204,7 @@ if(mode==='play'&&latest&&gateActive){
 // runner body
 let scale=clamp(W/420,.75,1.2),footY=H*.76+62*scale,footDepth=clamp((footY-horizon)/(H-horizon),0,1),laneSpacing=(roadTop+(roadBot-roadTop)*footDepth)*2/3;let targetX=vanishX+(lane-1)*laneSpacing;if(runnerLaneX===null)runnerLaneX=targetX;runnerLaneX+=(targetX-runnerLaneX)*Math.min(1,dt*16);let cx=runnerLaneX,cy=H*.76+Math.sin(now*.013*motion)*4;ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);ellipse(0,55,31,9,'#254b6199');let leg=Math.sin(now*.014*motion)*12;round(-18,13+leg,15,52,8,'#2e4866');round(7,13-leg,15,52,8,'#344c69');ellipse(-10,62+leg,15,7,'#f36357');ellipse(16,62-leg,15,7,'#f36357');round(-25,-31,50,59,16,'#f7f2eb');round(-17,-25,34,36,12,'#e66c49');ellipse(-27,-8+leg*.2,11,23,'#f4d4ac');ellipse(27,-8-leg*.2,11,23,'#f4d4ac');ellipse(0,-44,27,30,'#ffd6a4');ellipse(0,-59,31,17,'#49332f');for(let i=0;i<5;i++)ellipse(-24+i*12,-68+Math.sin(i*3)*6,11,11,'#49332f');round(-19,-16,38,40,12,'#43546c');round(-14,-11,28,29,7,'#e0a35a');label('🐾',0,5,18,'#fff','#b57c4c');ctx.restore();
 petals.forEach(p=>{p.y+=dt*p.v*motion*.14;p.x+=dt*.014;if(p.y>1.1){p.y=-.1;p.x=Math.random()}if(p.x>1.1)p.x=-.1;ellipse(p.x*W,p.y*H,p.s,p.s*.56,'#ffd2e5bc')});}
-requestAnimationFrame(scene);buildGroups();const masteryGoals=[
+requestAnimationFrame(scene);const masteryGoals=[
  {name:'初步認識',total:3,correct:3,pct:0,streak:0,types:0,days:0},
  {name:'開始熟悉',total:8,correct:0,pct:60,streak:0,types:0,days:0},
  {name:'基本掌握',total:15,correct:0,pct:75,streak:3,types:0,days:0},
@@ -358,5 +358,6 @@ $('speechPitch').addEventListener('input',()=>{$('speechPitchLabel').textContent
 $('speechRate').addEventListener('change',()=>{preferences.speechRate=Number($('speechRate').value);savePreferences()});
 $('previewMusic').onclick=()=>{preferences.musicEnabled=true;$('musicEnabled').checked=true;savePreferences();startMusic()};
 applyPreferences();
+buildGroups();
 openHub();
 </script></body></html>
