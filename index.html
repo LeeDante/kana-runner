@@ -598,4 +598,7 @@ $('previewMusic').onclick=()=>{preferences.musicEnabled=true;$('musicEnabled').c
 applyPreferences();
 buildGroups();
 openHub();
+if('serviceWorker' in navigator && location.protocol==='https:'){
+ window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).catch(err=>console.warn('離線快取無法啟用',err)));
+}
 </script></body></html>
