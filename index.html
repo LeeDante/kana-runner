@@ -4,7 +4,8 @@
 .rowSwitcher{display:grid;grid-template-columns:43px minmax(0,1fr) 43px;flex:1;align-items:center;border:2px solid #203d5c;border-radius:13px;overflow:hidden;background:white;color:#214977;min-width:0;height:46px}.rowSwitcher button{height:100%;border:0;background:#eaf4fc;font-size:32px;color:#285d8d;line-height:1;cursor:pointer}.rowSwitcher button:disabled{opacity:.28;cursor:default}.rowSwitcher #previewCurrent{text-align:center;font-size:20px;font-weight:900}.previewToolbar #previewPlayAll{font-size:13px;padding:8px;max-width:135px}.previewToolbar{gap:7px}
 .kanaLine{position:relative;padding-bottom:17px;cursor:pointer}.masterySegments{position:absolute;bottom:5px;left:12px;right:12px;height:7px;display:flex;gap:5px}.masterySegments span{flex:1;background:#e3eee6;border-radius:3px}.masterySegments span.lit{background:#99d7ae}.kanaLine.expanded{padding-bottom:15px}.kanaLine.expanded .masterySegments{bottom:auto;top:52px}.masteryDetail{grid-column:1/-1;text-align:left;border-top:1px solid #e8f0ea;padding:17px 8px 3px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:#3d6a51}.masteryDetail[hidden]{display:none}.masteryDetail strong{color:#246744;font-size:13px}.masteryDetail small{color:#66877a}.preview{overflow-y:auto}.kanaLine:focus-visible{outline:2px solid #77b39b;outline-offset:2px}
 .versionTag{display:inline-block;font-size:11px;font-weight:800;color:#3772a8;background:#e3f1ff;border:1px solid #c4dff3;padding:3px 7px;border-radius:9px;vertical-align:middle;margin-left:3px;white-space:nowrap}.previewStatus{line-height:1.5}
-</style></head><body><canvas id="game"></canvas><div id="ui"><div id="playHud" class="hidden"><div class="top"><div class="glass tag" id="chapter">🌸 五十音・あ行<small>累積式練習</small></div><div class="glass score" id="score">⭐ 0</div></div><div class="hudprogress"><div id="progress"></div></div><div class="combo" id="combo">🔥 COMBO ×0</div><div class="question" id="question"><div class="hint" id="qtype">選出正確發音</div><div id="prompt" class="kana">あ</div><button id="speak" title="重播發音">🔊 重播</button><div id="audioStatus" style="font-size:13px;color:#965224;margin-top:4px;min-height:18px" role="status" aria-live="polite"></div></div><div class="glass status" id="speed">⚡ 1.0×</div><div class="actionbar"><button id="left">◀<small>左側答案</small></button><button id="right">▶<small>右側答案</small></button></div><div class="banner hidden" id="feedback"></div></div><div class="screen" id="landing"><div class="panel hub"><header><b>🌸 五十音之路 <span class="versionTag">V1.9.1</span></b><small>日語跑酷學習</small></header><section class="hero"><div>JAPANESE RUNNER</div><h1>從五十音開始，<br>跑出你的日語力！</h1><p>🏃🌸⛩️</p><button id="hubContinue" class="primary">▶ 繼續學習</button></section><h2>學習課程</h2><button class="course" id="hubKana"><strong>あ　第一章｜五十音</strong><small>平假名・片假名・發音</small><span id="hubProgress"></span></button><div class="course locked"><strong>語　第二章｜日常單字</strong><small>購物・餐廳・交通・住宿　｜　準備中</small></div><div class="course locked"><strong>🎧　第三章｜情境聽力</strong><small>辨識句子的關鍵字　｜　準備中</small></div><div class="hubNav"><button class="secondary" id="hubPreview">📚 預習</button><button class="secondary" id="hubExam">🏁 考試</button><button class="secondary" id="hubReview">📈 複習</button></div></div></div><div class="screen hidden" id="home"><div class="panel"><button id="examBackHome" class="secondary" style="display:block;margin:0 0 10px;padding:8px 12px">← 返回遊戲首頁</button><div style="font-size:40px">🌸⛩️🏃</div><h1>五十音之路</h1><p>日文跑酷・互動試玩版</p><div class="guide">聽音辨字・看字辨音・平片假名互換<br/>左右選答案；不選則通過中央視為放棄。答案門會在發音後從遠處接近。</div><h2>選擇學習行</h2><div class="groups" id="groups"></div><div class="notice" id="masteryDisplay"></div><div class="guide" style="text-align:left"><label for="voiceChoice">日文發音聲音</label><select id="voiceChoice" style="width:100%;margin:7px 0;padding:9px;border-radius:9px"><option value="auto">自動選擇日文語音</option></select><label for="speechRate">發音速度：<span id="speechRateLabel">0.72×</span></label><input id="speechRate" type="range" min="0.55" max="1" step="0.05" value="0.7" style="width:100%"></div><button class="secondary" id="testVoice" style="width:100%">🔊 測試日文句子及五十音</button><div class="guide" id="voiceDiagnostic" style="margin:8px 0;text-align:left">尚未檢查語音。請先按「先測試日文語音」，確認是否能聽到「あいうえお」。</div><button class="primary" id="start">▶ 開始跑酷（15 題）</button><button class="secondary" id="openReview">📖 複習區</button><button class="secondary" id="reset">↻ 清除試玩進度</button><div class="notice">音訊由裝置日文語音合成提供，首次使用請開啟聲音。<br/>畫面為即時繪製的可玩版本，非概念圖片的原生 3D 模型。</div></div></div><div class="screen hidden" id="preview"><div class="panel preview"><div class="previewHeading"><button id="previewBack" class="secondary">‹ 返回</button><div><h2>📚 五十音預習</h2><small>五個假名，一頁學會</small></div></div><div class="previewToolbar"><div class="rowSwitcher" aria-label="五十音行切換"><button id="previewPrev" aria-label="上一行">‹</button><div id="previewCurrent" role="status" aria-live="polite">あ行</div><button id="previewNext" aria-label="下一行">›</button></div><button id="previewPlayAll" class="secondary">🔊 整行播放</button></div><div class="kanaHeader"><span>平假名</span><span>片假名</span><span>羅馬拼音</span><span>發音</span></div><div id="kanaRows"></div><div class="previewFooter"><label><input id="previewRoman" type="checkbox" checked> 顯示羅馬拼音</label><span id="previewTotal"></span></div><p class="previewStatus" id="previewStatus">點選卡片可以查看熟悉度，點選喇叭即可播放讀音</p><button id="previewRun" class="primary">🏃 開始跑酷</button><button id="previewResults" class="secondary">📈 查看複習紀錄</button></div></div><div class="screen hidden" id="result"><div class="panel"><div style="font-size:45px">🏆🌸</div><h1>跑酷完成！</h1><p id="resultCaption">漂亮的一趟旅程！</p><div class="statgrid" id="stats"></div><p id="resultWeak"></p><button class="primary" id="retry">↻ 再挑戰</button><button class="secondary" id="backHome">返回關卡地圖</button><button class="secondary" id="resultReview">查看複習區</button></div></div><div class="screen hidden" id="review"><div class="panel"><h1>📖 複習區</h1><div class="guide">點選發音按鈕即可複習。練習與正式跑酷結果會保存在目前瀏覽器。</div><div id="reviewList"></div><button class="primary" id="reviewBack">返回主畫面</button></div></div></div>
+.gear{border:1px solid #b9d8ee;background:#fff;border-radius:13px;font-size:23px;padding:6px 10px;color:#285377}.settingsPanel{text-align:left;max-width:470px}.settingsTitle{display:flex;align-items:center;gap:10px}.settingsTitle h2{margin:0}.settingGroup{margin:13px 0;padding:12px;border:1px solid #c9dfea;background:#fff;border-radius:14px}.settingGroup label{display:block;font-weight:700;font-size:13px;margin:6px 0}.settingGroup label input[type=checkbox]{float:right}.settingGroup input[type=range],.settingGroup select{width:100%;margin:5px 0}.settingGroup select{font-size:14px;padding:8px;border-radius:8px}.settingGroup output{float:right}.settingGroup .secondary{width:100%}.settingsPanel{max-height:95dvh;overflow-y:auto}
+</style></head><body><canvas id="game"></canvas><div id="ui"><div id="playHud" class="hidden"><div class="top"><div class="glass tag" id="chapter">🌸 五十音・あ行<small>累積式練習</small></div><div class="glass score" id="score">⭐ 0</div></div><div class="hudprogress"><div id="progress"></div></div><div class="combo" id="combo">🔥 COMBO ×0</div><div class="question" id="question"><div class="hint" id="qtype">選出正確發音</div><div id="prompt" class="kana">あ</div><button id="speak" title="重播發音">🔊 重播</button><div id="audioStatus" style="font-size:13px;color:#965224;margin-top:4px;min-height:18px" role="status" aria-live="polite"></div></div><div class="glass status" id="speed">⚡ 1.0×</div><div class="actionbar"><button id="left">◀<small>左側答案</small></button><button id="right">▶<small>右側答案</small></button></div><div class="banner hidden" id="feedback"></div></div><div class="screen" id="landing"><div class="panel hub"><header><b>🌸 五十音之路 <span class="versionTag">V2.0</span></b><button class="gear" id="openSettings" aria-label="遊戲設定">⚙️</button></header><section class="hero"><div>JAPANESE RUNNER</div><h1>從五十音開始，<br>跑出你的日語力！</h1><p>🏃🌸⛩️</p><button id="hubContinue" class="primary">▶ 繼續學習</button></section><h2>學習課程</h2><button class="course" id="hubKana"><strong>あ　第一章｜五十音</strong><small>平假名・片假名・發音</small><span id="hubProgress"></span></button><div class="course locked"><strong>語　第二章｜日常單字</strong><small>購物・餐廳・交通・住宿　｜　準備中</small></div><div class="course locked"><strong>🎧　第三章｜情境聽力</strong><small>辨識句子的關鍵字　｜　準備中</small></div><div class="hubNav"><button class="secondary" id="hubPreview">📚 預習</button><button class="secondary" id="hubExam">🏁 考試</button><button class="secondary" id="hubReview">📈 複習</button></div></div></div><div class="screen hidden" id="settings"><div class="panel settingsPanel"><div class="settingsTitle"><button class="secondary" id="settingsBack">‹ 返回</button><h2>⚙️ 遊戲設定</h2></div><div class="settingGroup"><label>🎵 背景音樂 <input id="musicEnabled" type="checkbox" checked></label><label>選擇旋律</label><select id="musicTrack"><option value="bright">🌸 櫻花小徑｜輕快可愛</option><option value="calm">🍵 靜謐庭園｜療癒木琴</option></select><button class="secondary" id="previewMusic">▶ 試聽旋律</button><label>音樂音量 <output id="musicVolumeText">15%</output></label><input id="musicVolume" type="range" min="0" max="100" value="15"></div><div class="settingGroup"><label>🔔 答題音效音量 <output id="effectVolumeText">60%</output></label><input id="effectVolume" type="range" min="0" max="100" value="60"><label>日文語音音量 <output id="voiceVolumeText">100%</output></label><input id="voiceVolume" type="range" min="0" max="100" value="100"></div><div class="settingGroup"><div class="guide" style="text-align:left"><label for="voiceChoice">日文發音聲音</label><select id="voiceChoice" style="width:100%;margin:7px 0;padding:9px;border-radius:9px"><option value="auto">自動選擇日文語音</option></select><label for="speechRate">發音速度：<span id="speechRateLabel">0.72×</span></label><input id="speechRate" type="range" min="0.55" max="1" step="0.05" value="0.7" style="width:100%"></div><button class="secondary" id="testVoice" style="width:100%">🔊 測試日文句子及五十音</button><div class="guide" id="voiceDiagnostic" style="margin:8px 0;text-align:left">尚未檢查語音。請先按「先測試日文語音」，確認是否能聽到「あいうえお」。</div></div><div class="settingGroup"><label>📳 答錯震動 <input id="wrongVibrate" type="checkbox"></label><p class="notice" id="vibrationTip">部分手機不支援網頁震動。</p></div><button class="primary" id="settingsDone">完成設定</button></div></div><div class="screen hidden" id="home"><div class="panel"><button id="examBackHome" class="secondary" style="display:block;margin:0 0 10px;padding:8px 12px">← 返回遊戲首頁</button><div style="font-size:40px">🌸⛩️🏃</div><h1>五十音之路</h1><p>日文跑酷・互動試玩版</p><div class="guide">聽音辨字・看字辨音・平片假名互換<br/>左右選答案；不選則通過中央視為放棄。答案門會在發音後從遠處接近。</div><h2>選擇學習行</h2><div class="groups" id="groups"></div><div class="notice" id="masteryDisplay"></div><div class="guide" style="margin:12px 0">請先到首頁齒輪設定頁確認音量語調</div><button class="primary" id="start">▶ 開始跑酷（15 題）</button><button class="secondary" id="openReview">📖 複習區</button><button class="secondary" id="reset">↻ 清除試玩進度</button><div class="notice">音訊由裝置日文語音合成提供，首次使用請開啟聲音。<br/>畫面為即時繪製的可玩版本，非概念圖片的原生 3D 模型。</div></div></div><div class="screen hidden" id="preview"><div class="panel preview"><div class="previewHeading"><button id="previewBack" class="secondary">‹ 返回</button><div><h2>📚 五十音預習</h2><small>五個假名，一頁學會</small></div></div><div class="previewToolbar"><div class="rowSwitcher" aria-label="五十音行切換"><button id="previewPrev" aria-label="上一行">‹</button><div id="previewCurrent" role="status" aria-live="polite">あ行</div><button id="previewNext" aria-label="下一行">›</button></div><button id="previewPlayAll" class="secondary">🔊 整行播放</button></div><div class="kanaHeader"><span>平假名</span><span>片假名</span><span>羅馬拼音</span><span>發音</span></div><div id="kanaRows"></div><div class="previewFooter"><label><input id="previewRoman" type="checkbox" checked> 顯示羅馬拼音</label><span id="previewTotal"></span></div><p class="previewStatus" id="previewStatus">點選卡片可以查看熟悉度，點選喇叭即可播放讀音</p><button id="previewRun" class="primary">🏃 開始跑酷</button><button id="previewResults" class="secondary">📈 查看複習紀錄</button></div></div><div class="screen hidden" id="result"><div class="panel"><div style="font-size:45px">🏆🌸</div><h1>跑酷完成！</h1><p id="resultCaption">漂亮的一趟旅程！</p><div class="statgrid" id="stats"></div><p id="resultWeak"></p><button class="primary" id="retry">↻ 再挑戰</button><button class="secondary" id="backHome">返回關卡地圖</button><button class="secondary" id="resultReview">查看複習區</button></div></div><div class="screen hidden" id="review"><div class="panel"><h1>📖 複習區</h1><div class="guide">點選發音按鈕即可複習。練習與正式跑酷結果會保存在目前瀏覽器。</div><div id="reviewList"></div><button class="primary" id="reviewBack">返回主畫面</button></div></div></div>
 <script>
 'use strict';
 const groups=[['あ','い','う','え','お'],['か','き','く','け','こ'],['さ','し','す','せ','そ'],['た','ち','つ','て','と'],['な','に','ぬ','ね','の'],['は','ひ','ふ','へ','ほ'],['ま','み','む','め','も'],['や','ゆ','よ'],['ら','り','る','れ','ろ'],['わ','を','ん']];
@@ -16,7 +17,7 @@ let store;try{store=JSON.parse(localStorage.getItem('kanaRunnerV1')||'{}')}catch
 function save(){try{localStorage.setItem('kanaRunnerV1',JSON.stringify(store))}catch{}};
 function rate(e){let x=store.attempts[e.id];return x?Math.round(100*x.ok/x.total):0}
 function buildGroups(){let host=$('groups');host.innerHTML='';groups.forEach((g,i)=>{let b=document.createElement('button');b.textContent=g[0]+'行';b.className=(selected===i?'chosen ':'')+(i>store.unlocked?'locked':'');b.onclick=()=>{selected=i;buildGroups()};host.append(b)});$('masteryDisplay').textContent=`目前：${groups[selected][0]}行｜歷史答題率 ${Math.round(entries.filter(e=>e.g===selected).reduce((s,e)=>s+rate(e),0)/groups[selected].length)}%｜已解鎖到 ${groups[store.unlocked][0]}行`}
-function show(id){['landing','home','preview','result','review'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('playHud').classList.toggle('hidden',id!=='play');mode=id}
+function show(id){['landing','home','preview','result','review','settings'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('playHud').classList.toggle('hidden',id!=='play');mode=id}
 let currentSpeech=null, speechSerial=0, chosenJapaneseVoice=null;
 let speakingRate=.7;
 function getChosenVoice(){const list=japaneseVoices(speechSynthesis.getVoices());const v=$('voiceChoice').value;return list.find(x=>x.voiceURI===v)||list.find(x=>x.lang.toLowerCase().replace('_','-')==='ja-jp')||list[0]||null}
@@ -42,7 +43,7 @@ function say(text,opts={}){
  try{
    syn.cancel();
    // 在 Chrome 保留原始 click gesture，立即 enqueue speak，避免自動播放權限遺失。
-   const u=new SpeechSynthesisUtterance(text);currentSpeech=u;u.lang='ja-JP';u.rate=speakingRate;u.pitch=1;u.volume=1;
+   const u=new SpeechSynthesisUtterance(text);currentSpeech=u;u.lang='ja-JP';u.rate=speakingRate;u.pitch=1;u.volume=preferences.voiceVolume/100;
    chosenJapaneseVoice=getChosenVoice();if(chosenJapaneseVoice)u.voice=chosenJapaneseVoice;
    let begun=false,done=false;
    speechStatus('🔊 語音請求已送出，等待播放…');
@@ -66,7 +67,7 @@ async function testVoice(){
  // Direct playback on initial click is also dispatched below in the same handler.
 }
 function makeQuestions(){let all=entries.filter(e=>e.g<=selected),fresh=all.filter(e=>e.g===selected),old=all.filter(e=>e.g<selected);let rows=[];for(let i=0;i<15;i++){let pool=i<Math.round(15*(selected===0?1:.7))?fresh:(old.length?old:fresh);let e=choose([...pool].sort((a,b)=>rate(a)-rate(b)).slice(0,Math.max(2,Math.ceil(pool.length*.7))));let type=choose(['sound','reading','hiraKata','kataHira']);let bad=choose(all.filter(x=>x.id!==e.id && (type==='sound'?x.h!==e.h:type==='reading'?x.r!==e.r:type==='hiraKata'?x.k!==e.k:x.h!==e.h)));let correct=type==='sound'?e.h:type==='reading'?e.r:type==='hiraKata'?e.k:e.h;let wrong=type==='sound'?bad.h:type==='reading'?bad.r:type==='hiraKata'?bad.k:bad.h;rows.push({e,type,correct,wrong,answerSide:Math.random()<.5?0:2});}return rows}
-function begin(){primeSfx();if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked){alert('先通過前面的關卡！');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
+function begin(){primeSfx();startMusic();if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked){alert('先通過前面的關卡！');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
 function questionTravelMs(){return clamp(6000-(speed-1)*2500,4000,6750)}
 function activateGate(token){if(gateActive)return;if(mode!=='play'||token!==questionToken)return;gateActive=true;gateStarted=performance.now();gateDuration=questionTravelMs();gateZ=0;}
 function nextQuestion(){
@@ -106,17 +107,17 @@ function sfxNote(freq,start,duration,volume,type='sine',endFreq=freq){
 function playSfx(kind){
  primeSfx();
  if(kind==='correct'){
-  sfxNote(659.25,0,.12,.11,'sine');
-  sfxNote(987.77,.11,.23,.12,'sine');
+  sfxNote(659.25,0,.12,.11*preferences.effectVolume/60,'sine');
+  sfxNote(987.77,.11,.23,.12*preferences.effectVolume/60,'sine');
  }else{
-  sfxNote(310,0,.14,.12,'triangle',230);
-  sfxNote(210,.13,.19,.095,'triangle',145);
+  sfxNote(310,0,.14,.12*preferences.effectVolume/60,'triangle',230);
+  sfxNote(210,.13,.19,.095*preferences.effectVolume/60,'triangle',145);
  }
 }
 function judge(which){
  if(hold||mode!=='play')return;hold=1;gateActive=false;
  let q=questions[index],ok=which===q.answerSide;
- playSfx(ok?'correct':'wrong');
+ playSfx(ok?'correct':'wrong');if(!ok&&preferences.wrongVibrate&&navigator.vibrate)navigator.vibrate(110);
  let stat=store.attempts[q.e.id]||{total:0,ok:0};stat.total++;
  if(ok){stat.ok++;correctCount++;combo++;maxCombo=Math.max(maxCombo,combo);points+=100*Math.min(2,1+Math.floor(combo/5)*.5);speed=clamp(speed+.10,.7,1.8)}
  else{misses.push(q.e);combo=0;speed=clamp(speed-.2,.7,1.8)}
@@ -143,7 +144,7 @@ $('testVoice').onclick=()=>{
   if(!('speechSynthesis' in window)){box.textContent='❌ 不支援語音合成';return}
   try {
     speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance('こんにちは。あ、い、う、え、お。');u.lang='ja-JP';u.rate=speakingRate;u.volume=1;
+    const u=new SpeechSynthesisUtterance('こんにちは。あ、い、う、え、お。');u.lang='ja-JP';u.rate=speakingRate;u.volume=preferences.voiceVolume/100;
     if(chosenJapaneseVoice)u.voice=chosenJapaneseVoice;
     u.onstart=()=>{box.textContent+=' 已送出聲音（仍需確認實際能聽到）。'};
     u.onend=()=>{box.textContent+=' 播放事件已完成。若仍無聲請檢查 Chrome 網頁是否靜音／Windows 音量混音器。'};
@@ -271,5 +272,54 @@ $('kanaRows').addEventListener('touchstart',e=>{if(e.touches.length!==1)return;p
 $('kanaRows').addEventListener('touchend',e=>{if(previewTouchX===null||!e.changedTouches.length)return;const dx=e.changedTouches[0].clientX-previewTouchX,dy=e.changedTouches[0].clientY-previewTouchY;previewTouchX=null;previewTouchY=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4)changePreviewRow(dx<0?1:-1)},{passive:true});
 $('previewRoman').onchange=renderPreview;$('previewPlayAll').onclick=playPreviewRow;
 $('previewRun').onclick=begin;$('previewResults').onclick=openReview;
+
+const defaults={musicEnabled:true,musicTrack:'bright',musicVolume:15,effectVolume:60,voiceVolume:100,wrongVibrate:false,speechRate:.7};
+let preferences={...defaults};
+try{preferences={...defaults,...JSON.parse(localStorage.getItem('kanaRunnerSettings')||'{}')}}catch{}
+let musicTimer=null,musicStep=0,musicPreview=false;
+const musicMelodies={
+ bright:[523.25,659.25,783.99,659.25,587.33,698.46,783.99,0,783.99,880,783.99,659.25,587.33,523.25,587.33,0],
+ calm:[392,0,440,523.25,0,440,392,0,349.23,392,440,0,392,349.23,329.63,0]
+};
+function musicTick(){
+ if(!sfxContext||sfxContext.state!=='running'||!preferences.musicEnabled)return;
+ const melody=musicMelodies[preferences.musicTrack]||musicMelodies.bright;
+ const freq=melody[musicStep++%melody.length];
+ if(freq){
+  const osc=sfxContext.createOscillator(),gain=sfxContext.createGain(),now=sfxContext.currentTime;
+  osc.type=preferences.musicTrack==='calm'?'sine':'triangle';
+  osc.frequency.value=freq;
+  const volume=(preferences.musicVolume/100)*.065*(mode==='play'?.42:1);
+  gain.gain.setValueAtTime(.0001,now);
+  gain.gain.linearRampToValueAtTime(Math.max(.00011,volume),now+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+.23);
+  osc.connect(gain);gain.connect(sfxContext.destination);osc.start(now);osc.stop(now+.25);
+ }
+}
+function startMusic(){primeSfx();if(musicTimer)clearInterval(musicTimer);musicTimer=null;if(preferences.musicEnabled){musicStep=0;musicTick();musicTimer=setInterval(musicTick,preferences.musicTrack==='calm'?440:300)}}
+function stopMusic(){if(musicTimer)clearInterval(musicTimer);musicTimer=null}
+function applyPreferences(){
+ ['musicEnabled','wrongVibrate'].forEach(id=>$(id).checked=!!preferences[id]);
+ ['musicVolume','effectVolume','voiceVolume'].forEach(id=>{$(id).value=preferences[id];$(id+'Text').textContent=preferences[id]+'%'});
+ $('musicTrack').value=preferences.musicTrack;
+ speakingRate=preferences.speechRate;
+ $('speechRate').value=speakingRate;$('speechRateLabel').textContent=speakingRate.toFixed(2)+'×';
+ $('vibrationTip').textContent=('vibrate' in navigator)?'答錯時短震動（實際支援依裝置而定）':'目前裝置不支援網頁震動，設定仍可保留供手機使用';
+}
+function savePreferences(){try{localStorage.setItem('kanaRunnerSettings',JSON.stringify(preferences))}catch{}}
+function openSettings(){applyPreferences();show('settings');startMusic()}
+function closeSettings(){openHub();startMusic()}
+$('openSettings').onclick=openSettings;
+$('settingsBack').onclick=closeSettings;$('settingsDone').onclick=closeSettings;
+['musicEnabled','wrongVibrate','musicTrack','musicVolume','effectVolume','voiceVolume'].forEach(id=>{
+ $(id).addEventListener('change',()=>{
+  preferences[id]=($(id).type==='checkbox')?$(id).checked:($(id).type==='range'?Number($(id).value):$(id).value);
+  savePreferences();applyPreferences();if(id==='musicTrack'||id==='musicEnabled')startMusic();
+ });
+ if($(id).type==='range')$(id).addEventListener('input',()=>{$(id+'Text').textContent=$(id).value+'%';preferences[id]=Number($(id).value);savePreferences()});
+});
+$('speechRate').addEventListener('change',()=>{preferences.speechRate=Number($('speechRate').value);savePreferences()});
+$('previewMusic').onclick=()=>{preferences.musicEnabled=true;$('musicEnabled').checked=true;savePreferences();startMusic()};
+applyPreferences();
 openHub();
 </script></body></html>
