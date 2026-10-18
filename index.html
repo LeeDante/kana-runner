@@ -283,7 +283,7 @@ function renderMap(){
  });
  $('mapSelection').textContent='📍 '+groups[selected][0]+'行 · '+(selected>store.unlocked?'尚未解鎖（可預習）':'已解鎖');
 }
-$('mapStudy').onclick=openPreview;
+$('mapStudy').onclick=()=>openPreview('home');
 function renderPreview(){
  $('previewCurrent').textContent=groups[selected][0]+'行';
  $('previewPrev').disabled=selected===0;
@@ -319,7 +319,8 @@ function renderPreview(){
  });
  $('previewTotal').textContent=groups[selected].length+' 個假名';
 }
-function openPreview(){expandedKana=null;renderPreview();show('preview')}
+let previewOrigin='landing';
+function openPreview(origin='landing'){previewOrigin=origin;expandedKana=null;renderPreview();show('preview')}
 function openHub(){$('hubProgress').textContent='目前解鎖至：'+groups[store.unlocked][0]+'行';show('landing')}
 function openCourse(){buildGroups();show('home')}
 function playPreviewRow(){
@@ -337,7 +338,7 @@ function playPreviewRow(){
 $('hubContinue').onclick=()=>{selected=store.unlocked;openPreview()};
 $('hubKana').onclick=()=>{selected=store.unlocked;openPreview()};$('hubPreview').onclick=()=>{selected=store.unlocked;openPreview()};
 $('hubExam').onclick=openCourse;$('examBackHome').onclick=openHub;$('hubReview').onclick=openReview;
-$('previewBack').onclick=openHub;
+$('previewBack').onclick=()=>previewOrigin==='home'?openCourse():openHub();
 function changePreviewRow(delta){const next=Math.max(0,Math.min(groups.length-1,selected+delta));if(next===selected)return;selected=next;expandedKana=null;++speechSerial;if('speechSynthesis' in window)speechSynthesis.cancel();$('previewStatus').textContent='點選卡片可以查看熟悉度，點選喇叭即可播放讀音';renderPreview()}
 $('previewPrev').onclick=()=>changePreviewRow(-1);
 $('previewNext').onclick=()=>changePreviewRow(1);
