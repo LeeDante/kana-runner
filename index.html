@@ -62,7 +62,7 @@ async function testVoice(){
  // Direct playback on initial click is also dispatched below in the same handler.
 }
 function makeQuestions(){let all=entries.filter(e=>e.g<=selected),fresh=all.filter(e=>e.g===selected),old=all.filter(e=>e.g<selected);let rows=[];for(let i=0;i<15;i++){let pool=i<Math.round(15*(selected===0?1:.7))?fresh:(old.length?old:fresh);let e=choose([...pool].sort((a,b)=>rate(a)-rate(b)).slice(0,Math.max(2,Math.ceil(pool.length*.7))));let type=choose(['sound','reading','hiraKata','kataHira']);let bad=choose(all.filter(x=>x.id!==e.id && (type==='sound'?x.h!==e.h:type==='reading'?x.r!==e.r:type==='hiraKata'?x.k!==e.k:x.h!==e.h)));let correct=type==='sound'?e.h:type==='reading'?e.r:type==='hiraKata'?e.k:e.h;let wrong=type==='sound'?bad.h:type==='reading'?bad.r:type==='hiraKata'?bad.k:bad.h;rows.push({e,type,correct,wrong,answerSide:Math.random()<.5?0:2});}return rows}
-function begin(){if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked){alert('先通過前面的關卡！');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
+function begin(){primeSfx();if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked){alert('先通過前面的關卡！');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
 function questionTravelMs(){return clamp(6000-(speed-1)*2500,4000,6750)}
 function activateGate(token){if(gateActive)return;if(mode!=='play'||token!==questionToken)return;gateActive=true;gateStarted=performance.now();gateDuration=questionTravelMs();gateZ=0;}
 function nextQuestion(){
@@ -76,10 +76,43 @@ function nextQuestion(){
  say(q.e.h,{token,onSuccess:()=>activateGate(token)});
 
 }
-function selectLane(which){if(mode!=='play'||hold||!gateActive)return;lane=which;choice=which;}
+function selectLane(which){primeSfx();if(mode!=='play'||hold||!gateActive)return;lane=which;choice=which;}
+
+let sfxContext=null;
+function primeSfx(){
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return;
+  if(!sfxContext)sfxContext=new C();
+  if(sfxContext.state==='suspended')sfxContext.resume().catch(()=>{});
+ }catch(e){console.warn('音效無法啟動',e)}
+}
+function sfxNote(freq,start,duration,volume,type='sine',endFreq=freq){
+ if(!sfxContext||sfxContext.state!=='running')return;
+ const t=sfxContext.currentTime+start;
+ const o=sfxContext.createOscillator(),g=sfxContext.createGain();
+ o.type=type;
+ o.frequency.setValueAtTime(freq,t);
+ if(endFreq!==freq)o.frequency.exponentialRampToValueAtTime(Math.max(30,endFreq),t+duration);
+ g.gain.setValueAtTime(0.0001,t);
+ g.gain.exponentialRampToValueAtTime(Math.max(0.0002,volume),t+.012);
+ g.gain.exponentialRampToValueAtTime(.0001,t+duration);
+ o.connect(g);g.connect(sfxContext.destination);o.start(t);o.stop(t+duration+.025);
+}
+function playSfx(kind){
+ primeSfx();
+ if(kind==='correct'){
+  sfxNote(659.25,0,.12,.11,'sine');
+  sfxNote(987.77,.11,.23,.12,'sine');
+ }else{
+  sfxNote(310,0,.14,.12,'triangle',230);
+  sfxNote(210,.13,.19,.095,'triangle',145);
+ }
+}
 function judge(which){
  if(hold||mode!=='play')return;hold=1;gateActive=false;
  let q=questions[index],ok=which===q.answerSide;
+ playSfx(ok?'correct':'wrong');
  let stat=store.attempts[q.e.id]||{total:0,ok:0};stat.total++;
  if(ok){stat.ok++;correctCount++;combo++;maxCombo=Math.max(maxCombo,combo);points+=100*Math.min(2,1+Math.floor(combo/5)*.5);speed=clamp(speed+.10,.7,1.8)}
  else{misses.push(q.e);combo=0;speed=clamp(speed-.2,.7,1.8)}
