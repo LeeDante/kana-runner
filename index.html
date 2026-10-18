@@ -142,8 +142,10 @@ function makeQuestions(){
  }
  return rows;
 }
-function begin(){pausedElapsed=0;applyGateButtonTheme();primeSfx();startMusic();if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked&&!testMode){alert('先通過前面的關卡！或在地圖開啟測試模式。');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
-let pausedElapsed=0,pauseAt=0;
+function begin(){clearTimeout(feedbackTimer);feedbackTimer=null;feedbackRemaining=0;pausedElapsed=0;applyGateButtonTheme();primeSfx();startMusic();if('speechSynthesis' in window)window.speechSynthesis.resume();if(selected>store.unlocked&&!testMode){alert('先通過前面的關卡！或在地圖開啟測試模式。');return}questions=makeQuestions();index=combo=maxCombo=points=correctCount=0;speed=1;lane=1;runnerLaneX=null;misses=[];hold=0;gateZ=0;startTime=performance.now();show('play');nextQuestion()}
+let pausedElapsed=0,pauseAt=0,feedbackTimer=null,feedbackRemaining=0,feedbackDeadline=0;
+function advanceAfterFeedback(){feedbackTimer=null;feedbackRemaining=0;$('feedback').classList.add('hidden');if(mode==='play'){index++;nextQuestion()}}
+function scheduleFeedbackAdvance(ms){clearTimeout(feedbackTimer);feedbackRemaining=ms;feedbackDeadline=performance.now()+ms;feedbackTimer=setTimeout(()=>{if(mode==='play')advanceAfterFeedback();else feedbackRemaining=0},ms)}
 function questionTravelMs(){return clamp(6000-(speed-1)*2500,4000,6750)}
 function activateGate(token){if(gateActive)return;if(mode!=='play'||token!==questionToken)return;gateActive=true;gateStarted=performance.now();gateDuration=questionTravelMs();gateZ=0;}
 function nextQuestion(){
@@ -207,9 +209,9 @@ function judge(which){
  stat.lastDay=day;
  store.attempts[q.e.id]=stat;save();}$('feedback').textContent=ok?'✨ 正確！ +'+(100*Math.min(2,1+Math.floor(combo/5)*.5)):(which===1?'⏭ 未選擇｜'+q.correct:'❌ 答錯｜'+q.correct);
  $('feedback').classList.remove('hidden');feedbackUntil=performance.now()+950;gateZ=1;
- setTimeout(()=>{$('feedback').classList.add('hidden');if(mode==='play'){index++;nextQuestion()}},950)
+ scheduleFeedbackAdvance(950)
 }
-function finish(){let elapsed=(performance.now()-startTime-pausedElapsed)/1000;let acc=correctCount/questions.length;let pass=acc>=.85; if(!testMode&&pass&&selected===store.unlocked&&store.unlocked<groups.length-1)store.unlocked++;save();show('result');$('resultCaption').textContent=pass?'🎉 通過本次測驗！':'再複習一下，下次會更好！';$('stats').innerHTML=`<div>${points.toLocaleString()}<small>本次總分</small></div><div>${Math.floor(elapsed/60).toString().padStart(2,'0')}:${Math.floor(elapsed%60).toString().padStart(2,'0')}<small>完成時間</small></div><div>${Math.round(acc*100)}%<small>答對率 ${correctCount}/${questions.length}</small></div><div>${maxCombo}<small>最高 COMBO</small></div>`;$('resultWeak').textContent=misses.length?'建議複習：'+[...new Set(misses.map(x=>x.h))].join('、'):'完美！沒有錯題。';buildGroups()}
+function finish(){clearTimeout(feedbackTimer);feedbackTimer=null;let elapsed=(performance.now()-startTime-pausedElapsed)/1000;let acc=correctCount/questions.length;let pass=acc>=.85; if(!testMode&&pass&&selected===store.unlocked&&store.unlocked<groups.length-1)store.unlocked++;save();show('result');$('resultCaption').textContent=pass?'🎉 通過本次測驗！':'再複習一下，下次會更好！';$('stats').innerHTML=`<div>${points.toLocaleString()}<small>本次總分</small></div><div>${Math.floor(elapsed/60).toString().padStart(2,'0')}:${Math.floor(elapsed%60).toString().padStart(2,'0')}<small>完成時間</small></div><div>${Math.round(acc*100)}%<small>答對率 ${correctCount}/${questions.length}</small></div><div>${maxCombo}<small>最高 COMBO</small></div>`;$('resultWeak').textContent=misses.length?'建議複習：'+[...new Set(misses.map(x=>x.h))].join('、'):'完美！沒有錯題。';buildGroups()}
 let reviewOrigin='landing';function openReview(origin){reviewOrigin=(typeof origin==='string'?origin:(mode==='result'?'result':mode==='preview'?'preview':mode==='home'?'home':'landing'));show('review');let host=$('reviewList');host.innerHTML='';entries.filter(e=>e.g<=Math.max(store.unlocked,selected)).forEach(e=>{let n=store.attempts[e.id],r=rate(e),d=document.createElement('div');d.className='reviewrow';d.innerHTML=`<strong>${e.h} ${e.k}</strong><small>${e.r}　${n?n.ok+'/'+n.total+' 題':'尚未練習'}</small><span class="pill" style="background:${r>=80?'#36ac79':r>=50?'#dda343':'#df7064'}">${r}%</span>`;let b=document.createElement('button');b.textContent='🔊';b.className='secondary';b.onclick=()=>say(e.h);d.append(b);host.append(d)})}
 $('speechRate').oninput=()=>{$('speechRateLabel').textContent=Number($('speechRate').value).toFixed(2)+'×';speakingRate=Number($('speechRate').value)};
 $('voiceChoice').onchange=()=>{chosenJapaneseVoice=getChosenVoice()};
@@ -411,9 +413,9 @@ $('kanaRows').addEventListener('touchend',e=>{if(previewTouchX===null||!e.change
 $('previewRoman').onchange=renderPreview;$('previewPlayAll').onclick=playPreviewRow;
 $('previewRun').onclick=openCourse;$('previewResults').onclick=openReview;
 
-function pauseGame(){if(mode!=='play')return;pauseAt=performance.now();if('speechSynthesis' in window)speechSynthesis.pause();show('pause')}
-function resumeGame(){if(mode!=='pause')return;const delta=performance.now()-pauseAt;pausedElapsed+=delta;gateStarted+=delta;show('play');if('speechSynthesis' in window)speechSynthesis.resume()}
-function exitGame(){if('speechSynthesis' in window)speechSynthesis.cancel();questionToken++;gateActive=false;openCourse()}
+function pauseGame(){if(mode!=='play')return;pauseAt=performance.now();if(feedbackTimer!==null){feedbackRemaining=Math.max(0,feedbackDeadline-pauseAt);clearTimeout(feedbackTimer);feedbackTimer=null}if('speechSynthesis' in window)speechSynthesis.cancel();show('pause')}
+function resumeGame(){if(mode!=='pause')return;const delta=performance.now()-pauseAt;pausedElapsed+=delta;if(gateActive)gateStarted+=delta;show('play');if(hold){scheduleFeedbackAdvance(Math.max(100,feedbackRemaining));return}if(!gateActive&&latest){const token=questionToken;say(latest.e.h,{token,onSuccess:()=>activateGate(token)})}}
+function exitGame(){clearTimeout(feedbackTimer);feedbackTimer=null;feedbackRemaining=0;if('speechSynthesis' in window)speechSynthesis.cancel();questionToken++;gateActive=false;openCourse()}
 $('pauseBtn').onclick=pauseGame;$('resumeBtn').onclick=resumeGame;
 $('pauseRestart').onclick=()=>{if('speechSynthesis' in window)speechSynthesis.cancel();begin()};
 $('pauseExit').onclick=exitGame;
