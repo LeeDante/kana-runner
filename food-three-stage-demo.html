@@ -12,9 +12,12 @@ const batches=[
 ];
 const params=new URLSearchParams(location.search),batchId=Math.max(0,Number(params.get('batch'))||0),topicId=params.get('topic')||'food';
 let selectedBatch=null;try{const d=JSON.parse(sessionStorage.getItem('kanaTownPlayData')||'null');if(d&&d.topic===topicId&&d.batch===batchId&&d.words.length===6)selectedBatch=d}catch(e){}
-const words=selectedBatch?selectedBatch.words.map(w=>({jp:w[0],zh:w[2],e:w[3]})):(batches[batchId]||batches[0]);
-document.querySelector('header h1').textContent='🍱 '+(selectedBatch?.label||'美食街')+'｜第 '+(batchId+1)+' 批';
-const extras=[{jp:'たまご',zh:'雞蛋',e:'🥚'},{jp:'バナナ',zh:'香蕉',e:'🍌'},{jp:'ケーキ',zh:'蛋糕',e:'🍰'},{jp:'にく',zh:'肉',e:'🍖'},{jp:'さかな',zh:'魚',e:'🐟'}],all=[...words,...extras];
+let urlWords=null;try{const arr=JSON.parse(params.get('words')||'null');if(Array.isArray(arr)&&arr.length===6&&arr.every(w=>Array.isArray(w)&&w.length===4))urlWords=arr}catch(e){}
+const sourceWords=urlWords||selectedBatch?.words||(topicId==='food'?batches[batchId]?.map(w=>[w.jp,'',w.zh,w.e]):null);
+if(!sourceWords){document.body.innerHTML='<main style="padding:30px;text-align:center;font:18px sans-serif">⚠️ 尚未取得此批次單字，請返回生活小鎮重新選取。<p><a href="./?open=town">返回生活小鎮</a></p></main>';throw Error('Vocabulary batch missing: '+topicId+' / '+batchId)}
+const words=sourceWords.map(w=>({jp:w[0],zh:w[2],e:w[3]}));
+document.querySelector('header h1').textContent='📚 '+(params.get('label')||selectedBatch?.label||'美食街')+'｜第 '+(batchId+1)+' 批';
+const all=words;
 const order=[2,0,4,1,5,3];const wordRecordKey=topicId==='food'?'kanaRunnerFoodWordV2':'kanaRunnerTownWordV1';let wordRecords={};try{wordRecords=JSON.parse(localStorage.getItem(wordRecordKey)||'{}')}catch{};function saveWordRecords(){try{localStorage.setItem(wordRecordKey,JSON.stringify(wordRecords))}catch{}}function noteWord(isCorrect){const w=words[order[idx]];const key=topicId+'-'+batchId+'-'+w.jp;const rec=wordRecords[key]||{ok:[0,0,0],wrong:[0,0,0],hint:0,last:''};if(isCorrect)rec.ok[stage]++;else rec.wrong[stage]++;if(stage===2&&usedHint&&isCorrect)rec.hint++;rec.last=new Date().toISOString();wordRecords[key]=rec;saveWordRecords();}let stage=0,idx=0,success=0,mistakes=0,paused=false,slow=false,locked=false,completed=false,queue=[],last=0,raf,delay=0,chosen=[],tiles=[],usedHint=false,audioMode=false;
 let unlock=0;try{unlock=Math.max(0,Math.min(3,Number(localStorage.getItem('foodGame3Unlocked-'+topicId+'-'+batchId)||0)))}catch{}
 function saveUnlock(){try{localStorage.setItem('foodGame3Unlocked-'+topicId+'-'+batchId,String(unlock))}catch{}}
