@@ -37,13 +37,50 @@ h1{font-size:17px;line-height:1.15}
 .actions button{padding:9px 6px;font-size:12px;border-radius:9px;min-height:39px}
 small.note{flex:none;font-size:9px;line-height:1.15}
 @media(max-height:640px){.app{gap:3px}.sub{display:none}.status{padding:4px 9px}.bottom{padding:6px 8px}.actions{margin-top:5px}.actions button{min-height:35px;padding:7px 5px}small.note{display:none}}
-</style></head><body><main class="app"><header><a class="back" href="./?open=town">‹ 小鎮</a><div><div class="sub">STATION EXPLORER · 互動範例</div><h1>🚉 車站探索</h1></div><span>🌸</span></header><div class="status"><span id="step">第 1 / 6 題</span><span id="score">正確 0 題</span></div><div class="rail"><i id="bar"></i></div><section class="stage" aria-label="日本車站互動地圖"><div class="mountain"></div><div class="station"><div class="stationName">えき</div><div class="stationDoors"></div></div><div class="track"></div><div class="street"></div><div class="sakura tree1">🌸</div><div class="sakura tree2">🌸</div><div class="sakura tree3">🌸</div><span class="sceneLabel">🌸 車站前廣場</span><div id="items"></div></section><div class="bottom"><div class="question" id="question">🔊 聽發音，點選正確交通工具</div><div class="hint" id="hint">點選場景中的交通工具｜可重聽、無限時</div><div class="feedback" id="feedback" aria-live="polite"></div><div class="actions"><button class="light" id="speak">🔊 點擊播放日文</button><button id="next" disabled>下一題 ›</button></div></div><small class="note">🧪 試玩版｜不影響正式學習紀錄</small></main><script>
+
+/* V6 sound feedback */
+header .sound-toggle{border:1px solid #ffffffc9;background:#fffdf4d9;border-radius:10px;padding:6px 9px;font-size:17px;cursor:pointer;flex:none}
+.item.correct{animation:answerPop .35s ease-out}
+.item.wrong{animation:answerShake .25s ease-in-out}
+@keyframes answerPop{0%{transform:translate(-50%,-50%) scale(.88)}65%{transform:translate(-50%,-50%) scale(1.08)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes answerShake{0%,100%{transform:translate(-50%,-50%)}30%{transform:translate(calc(-50% - 5px),-50%)}70%{transform:translate(calc(-50% + 5px),-50%)}}
+</style></head><body><main class="app"><header><a class="back" href="./?open=town">‹ 小鎮</a><div><div class="sub">STATION EXPLORER · 互動範例</div><h1>🚉 車站探索</h1></div><button class="sound-toggle" id="soundToggle" type="button" aria-label="關閉答題音效" aria-pressed="true">🔔</button></header><div class="status"><span id="step">第 1 / 6 題</span><span id="score">正確 0 題</span></div><div class="rail"><i id="bar"></i></div><section class="stage" aria-label="日本車站互動地圖"><div class="mountain"></div><div class="station"><div class="stationName">えき</div><div class="stationDoors"></div></div><div class="track"></div><div class="street"></div><div class="sakura tree1">🌸</div><div class="sakura tree2">🌸</div><div class="sakura tree3">🌸</div><span class="sceneLabel">🌸 車站前廣場</span><div id="items"></div></section><div class="bottom"><div class="question" id="question">🔊 聽發音，點選正確交通工具</div><div class="hint" id="hint">點選場景中的交通工具｜可重聽、無限時</div><div class="feedback" id="feedback" aria-live="polite"></div><div class="actions"><button class="light" id="speak">🔊 點擊播放日文</button><button id="next" disabled>下一題 ›</button></div></div><small class="note">🧪 試玩版｜不影響正式學習紀錄</small></main><script>
 const words=[['でんしゃ','densha','電車','🚃'],['バス','basu','公車','🚌'],['タクシー','takushii','計程車','🚕'],['しんかんせん','shinkansen','新幹線','🚄'],['ちかてつ','chikatetsu','地下鐵','🚇'],['じてんしゃ','jitensha','腳踏車','🚲']];
 const $=id=>document.getElementById(id),order=[3,1,5,0,4,2];let idx=0,correct=0,answered=false,utterance=null;
+
+let effectContext=null,effectsEnabled=true;
+function playEffect(type){
+  if(!effectsEnabled)return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!effectContext)effectContext=new AC();
+    const ctx=effectContext;
+    if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+    const start=ctx.currentTime+.012;
+    const notes=type==='correct' ? [[659.25,0,.12],[783.99,.115,.12],[1046.50,.23,.22]] : [[330,0,.14],[246.94,.15,.21]];
+    notes.forEach(([hz,offset,duration])=>{
+      const oscillator=ctx.createOscillator(),gain=ctx.createGain(),t=start+offset;
+      oscillator.type=type==='correct'?'sine':'triangle';
+      oscillator.frequency.setValueAtTime(hz,t);
+      gain.gain.setValueAtTime(.0001,t);
+      gain.gain.exponentialRampToValueAtTime(type==='correct'?.12:.09,t+.014);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+      oscillator.connect(gain);gain.connect(ctx.destination);oscillator.start(t);oscillator.stop(t+duration+.015);
+    });
+  }catch(e){/* audio unavailable; visual feedback remains */}
+}
+$('soundToggle').onclick=()=>{
+  effectsEnabled=!effectsEnabled;
+  $('soundToggle').textContent=effectsEnabled?'🔔':'🔕';
+  $('soundToggle').setAttribute('aria-label',effectsEnabled?'關閉答題音效':'開啟答題音效');
+  $('soundToggle').setAttribute('aria-pressed',String(effectsEnabled));
+  if(effectsEnabled)playEffect('correct');
+};
 function showAudioFallback(message){$('hint').textContent=message;$('question').textContent='請找出：'+words[order[idx]][0]+'（'+words[order[idx]][1]+'）'}
 function say(){const word=words[order[idx]];if(!('speechSynthesis' in window)){showAudioFallback('此瀏覽器不支援語音，已顯示日文提示。');return}
 try{const synth=window.speechSynthesis;synth.cancel();const u=new SpeechSynthesisUtterance(word[0]);u.lang='ja-JP';u.rate=.82;u.pitch=1;u.volume=1;const voices=synth.getVoices();const ja=voices.find(v=>v.lang.toLowerCase()==='ja-jp')||voices.find(v=>v.lang.toLowerCase().startsWith('ja'));if(ja)u.voice=ja;utterance=u;let fired=false;u.onstart=()=>{fired=true;$('hint').textContent='🔊 正在播放：'+word[0]+'。可以再次點擊重聽。'};u.onend=()=>{$('speak').textContent='🔊 再聽一次'};u.onerror=()=>{if(utterance===u)showAudioFallback('語音播放失敗，請確認裝置音量，或改用下方日文提示。')};$('speak').textContent='🔊 播放日文';synth.speak(u);setTimeout(()=>{if(utterance===u&&!fired&&!synth.speaking&&!synth.pending)showAudioFallback('未偵測到語音播放，請再次點擊播放，或查看日文提示。')},1300)}catch(e){showAudioFallback('裝置暫時無法播放語音，已顯示日文。')}}
 function draw(){answered=false;$('step').textContent='第 '+(idx+1)+' / 6 題';$('score').textContent='正確 '+correct+' 題';$('bar').style.width=(idx/6*100)+'%';$('question').textContent='聽日文，找出正確交通工具';$('hint').textContent='依照聲音，在場景中找出目標；可重聽、無時間限制。';$('feedback').textContent='';$('next').disabled=true;$('speak').textContent='🔊 點擊播放日文';const area=$('items');area.replaceChildren();words.forEach((w,i)=>{let b=document.createElement('button');b.className='item';b.dataset.id=i;b.setAttribute('aria-label','目標 '+(i+1));b.innerHTML='<span class="ico">'+w[3]+'</span><span class="caption">點擊查看</span>';b.onclick=()=>pick(i,b);area.append(b)})}
-function pick(i,b){if(answered)return;const target=order[idx],w=words[target];if(i!==target){b.classList.add('wrong');$('feedback').textContent='再試一次，可點擊重聽。';setTimeout(()=>b.classList.remove('wrong'),600);return}answered=true;correct++;b.classList.add('correct');b.querySelector('.caption').textContent=w[0];$('question').textContent='✅ '+w[0]+' · '+w[2];$('feedback').textContent='答對！';$('score').textContent='正確 '+correct+' 題';$('next').disabled=false;$('next').textContent=idx===5?'查看成果 ✓':'下一題 ›'}
+function pick(i,b){if(answered)return;const target=order[idx],w=words[target];if(i!==target){playEffect('wrong');b.classList.add('wrong');$('feedback').textContent='再試一次，可點擊重聽。';setTimeout(()=>b.classList.remove('wrong'),600);return}answered=true;correct++;playEffect('correct');b.classList.add('correct');b.querySelector('.caption').textContent=w[0];$('question').textContent='✅ '+w[0]+' · '+w[2];$('feedback').textContent='答對！';$('score').textContent='正確 '+correct+' 題';$('next').disabled=false;$('next').textContent=idx===5?'查看成果 ✓':'下一題 ›'}
 $('speak').onclick=say;$('next').onclick=()=>{if(!answered)return;if(idx===5){$('bar').style.width='100%';$('question').innerHTML='<div class="done">🎉 車站探索完成！6 種交通工具都找到了。</div>';$('hint').textContent='試玩完成！可以重新挑戰。';$('feedback').textContent='';$('next').textContent='重新挑戰';$('next').disabled=false;$('next').onclick=()=>location.reload();return}idx++;draw();$('hint').textContent='請點擊「播放日文」聽下一題。'};draw();
 </script></body></html>
