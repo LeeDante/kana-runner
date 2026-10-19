@@ -12,23 +12,33 @@ const order=[2,0,4,1,5,3];let stage=0,idx=0,success=0,mistakes=0,paused=false,sl
 let unlock=0;try{unlock=Math.max(0,Math.min(3,Number(localStorage.getItem('foodGame3Unlocked')||0)))}catch{}
 function saveUnlock(){try{localStorage.setItem('foodGame3Unlocked',String(unlock))}catch{}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-let jpVoices=[],voiceAttempts=0,voiceToken=0;
-function refreshJapaneseVoices(){if(!('speechSynthesis' in window))return;jpVoices=speechSynthesis.getVoices().filter(v=>/^ja([-_]|$)/i.test(v.lang));}
-if('speechSynthesis' in window){refreshJapaneseVoices();speechSynthesis.addEventListener?.('voiceschanged',refreshJapaneseVoices)}
-function voiceNotice(message){$('feedback').textContent=message}
-function say(userInitiated=false){
- if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){voiceNotice('⚠️ 目前瀏覽器不支援語音，請用 Safari／Chrome 開啟');return;}
+let currentSpeech=null,voiceToken=0,jpVoices=[];
+function refreshJapaneseVoices(){
+ if(!('speechSynthesis' in window))return;
+ jpVoices=window.speechSynthesis.getVoices().filter(v=>String(v.lang).toLowerCase().replace('_','-').startsWith('ja'));
+}
+if('speechSynthesis' in window){refreshJapaneseVoices();window.speechSynthesis.addEventListener?.('voiceschanged',refreshJapaneseVoices)}
+function voiceNotice(msg){$('feedback').textContent=msg}
+function say(){
+ if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){voiceNotice('⚠️ 不支援語音播放');return}
+ const syn=window.speechSynthesis;
  try{
-  const synth=speechSynthesis;refreshJapaneseVoices();
-  synth.cancel();const u=new SpeechSynthesisUtterance(words[order[idx]].jp);
-  u.lang='ja-JP';u.rate=.78;u.pitch=1;u.volume=1;
-  if(jpVoices.length)u.voice=jpVoices.find(v=>v.localService)||jpVoices[0];
-  const token=++voiceToken;let started=false;
-  u.onstart=()=>{started=true;if(token===voiceToken&&userInitiated)voiceNotice('🔊 播放中：'+words[order[idx]].jp)};
-  u.onerror=()=>{if(token===voiceToken)voiceNotice('⚠️ 日文語音播放失敗，請點「重聽」，或改用 Safari 開啟')};
-  synth.resume();synth.speak(u);
-  if(userInitiated)setTimeout(()=>{if(token===voiceToken&&!started&&synth.speaking===false){voiceNotice('⚠️ 尚未聽到語音？請確認手機未靜音，並用 Safari 開啟測試')}} ,1300);
- }catch(err){voiceNotice('⚠️ 語音啟動失敗：'+err.message)}
+  refreshJapaneseVoices();
+  syn.cancel();
+  const u=new SpeechSynthesisUtterance(words[order[idx]].jp);
+  currentSpeech=u;
+  const token=++voiceToken;
+  u.lang='ja-JP';u.rate=.77;u.pitch=1;u.volume=1;
+  const selected=jpVoices.find(v=>String(v.lang).toLowerCase().replace('_','-')==='ja-jp')||jpVoices[0];
+  if(selected)u.voice=selected;
+  let begun=false,finished=false;
+  voiceNotice('🔊 語音請求已送出，等待播放…');
+  u.onstart=()=>{if(token!==voiceToken)return;begun=true;voiceNotice('🔊 正在播放 '+words[order[idx]].jp)};
+  u.onend=()=>{if(token!==voiceToken)return;finished=true;voiceNotice('✅ 語音播放完成')};
+  u.onerror=e=>{if(token!==voiceToken)return;finished=true;voiceNotice('⚠️ 日文語音失敗：'+(e.error||'未知錯誤')+'。請告訴我這個代碼')};
+  syn.speak(u);
+  setTimeout(()=>{if(token===voiceToken&&!begun&&!finished)voiceNotice('⚠️ 語音未啟動：請再次點擊播放，並告訴我顯示的訊息')},2200);
+ }catch(e){voiceNotice('⚠️ 語音例外：'+(e.message||e))}
 }
 function updateTabs(){for(let i=0;i<3;i++){const b=$('stage'+i);b.disabled=i>unlock;b.classList.toggle('on',i===stage)}}
 function boot(n){clearTimeout(delay);stage=n;idx=0;success=0;mistakes=0;completed=false;paused=false;slow=false;$('end').classList.remove('on');$('speed').textContent=n===2?'🔄 重排':'🐢 慢速';$('act').textContent=n===2?'✅ 完成':'✋ 拿取';$('hint').textContent=n===2?'💡 提示':'🔊 重聽';$('pause').textContent='⏸';updateTabs();newQuestion()}
@@ -41,7 +51,7 @@ delay=setTimeout(()=>{if(ok){idx++;if(idx>=6){endStage();return}}newQuestion()},
 function take(){if(locked||paused||completed)return;if(stage===2){const got=chosen.map(x=>x.ch).join(''),expected=words[order[idx]].jp;if(chosen.length!==[...expected].length){$('feedback').textContent='請先填滿所有格子';return}feedback(got===expected);return}const center=$('belt').clientWidth/2;if(!queue.length)return;const nearest=queue.reduce((a,b)=>Math.abs(a.x-center)<Math.abs(b.x-center)?a:b);if(Math.abs(nearest.x-center)>65){$('feedback').textContent='⏳ 等餐盤靠近中央再拿取！';return}feedback(nearest.id===order[idx])}
 function endStage(){completed=true;$('act').disabled=true;$('end').classList.add('on');$('endIcon').textContent=stage===2?'🎉🍱':'🏆🧺';$('endTitle').textContent=['輸送帶採購完成！','記憶採購完成！','料理台拼字完成！'][stage];$('endText').textContent='完成 6 個單字，失誤 '+mistakes+' 次。'+(stage===2?'三小關挑戰完成！記得隔天再複習，才會記得更牢。':'接著進行下一種記憶挑戰。');unlock=Math.max(unlock,Math.min(3,stage+1));saveUnlock();updateTabs();$('continue').textContent=stage===2?'再挑戰第一關':'前往第 '+(stage+2)+' 關'}
 function animate(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;if(!paused&&!locked&&!completed&&stage!==2){const width=$('belt').clientWidth;queue.forEach(it=>{it.x-=(slow?56:83)*dt;if(it.x < -60)it.x+=queue.length*133;it.el.style.left=it.x+'px'})}raf=requestAnimationFrame(animate)}
-$('act').onclick=take;$('hint').onclick=()=>{if(stage===2){usedHint=true;const word=[...words[order[idx]].jp];$('feedback').textContent='💡 提示：第一個假名是「'+word[0]+'」';return}say(true)};
+$('act').onclick=take;$('hint').onclick=()=>{if(stage===2){usedHint=true;const word=[...words[order[idx]].jp];$('feedback').textContent='💡 提示：第一個假名是「'+word[0]+'」';return}say()};
 $('speed').onclick=()=>{if(stage===2){chosen=[];renderSpell()}else{slow=!slow;$('speed').textContent=slow?'🐇 正常速':'🐢 慢速'}};
 $('pause').onclick=()=>{if(completed)return;paused=!paused;$('pause').textContent=paused?'▶':'⏸';$('act').disabled=paused||locked;$('feedback').textContent=paused?'⏸ 遊戲暫停':(stage===2?'繼續拼字':'繼續採購')};$('continue').onclick=()=>boot(stage===2?0:stage+1);$('retry').onclick=()=>boot(stage);for(let i=0;i<3;i++)$('stage'+i).onclick=()=>{if(i<=unlock)boot(i)};document.addEventListener('visibilitychange',()=>{if(document.hidden&&!completed){paused=true;$('pause').textContent='▶';$('act').disabled=true}});boot(0);raf=requestAnimationFrame(animate);
 })();
